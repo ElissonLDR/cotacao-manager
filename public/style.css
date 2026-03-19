@@ -1,15 +1,13 @@
-/*ESTILO 1*/
 .cotacao-box {
-    background:#fff;
-    padding:20px;
-    border-radius:8px;
-  }
-  
-  /*ESTILO 2*/
-  .cotacao-item {
-    display:flex;
-    justify-content:space-between;
-    padding:10px;
-    background:#f5f5f5;
-    margin-bottom:5px;
-  }
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.cotacao-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #f5f5f5;
+  margin-bottom: 6px;
+}

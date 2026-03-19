@@ -10,7 +10,6 @@ function cotacao_register_settings() {
 
 }
 
-
 function cotacao_sanitize($input){
 
   $old = get_option('cotacao_dados') ?: [];
@@ -24,7 +23,6 @@ function cotacao_sanitize($input){
     'history'=> $old['history'] ?? []
   ];
 
-  // Salva histórico apenas se mudou algo
   if (
     empty($old) ||
     $old['soja'] != $novo['soja'] ||
