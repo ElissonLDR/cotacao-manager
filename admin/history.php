@@ -1,57 +1,75 @@
 <?php
 
-/*========================================
-=        EXCLUIR TODO HISTÓRICO         =
-========================================*/
-add_action('admin_post_delete_cotacao_history', function(){
+add_action('admin_init', function(){
+
+  if (!isset($_GET['cotacao_action'])) return;
 
   if (!current_user_can('manage_options')) {
     wp_die('Sem permissão');
   }
 
-  if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'delete_cotacao_history')) {
-    wp_die('Falha de segurança');
-  }
-
   $dados = get_option('cotacao_dados') ?: [];
-  $dados['history'] = [];
+  $action = sanitize_text_field($_GET['cotacao_action']);
+  $index  = isset($_GET['index']) ? intval($_GET['index']) : null;
 
-  update_option('cotacao_dados', $dados);
+  // EXCLUIR TUDO
+  if ($action === 'delete_all') {
 
-  wp_redirect(admin_url('admin.php?page=cotacao'));
-  exit;
+    $antes = $dados['history'] ?? [];
 
-});
+    $dados['history'] = [];
 
+    update_option('cotacao_dados', $dados);
 
-/*========================================
-=     EXCLUIR ITEM ESPECÍFICO           =
-========================================*/
-add_action('admin_post_delete_cotacao_item', function(){
+    $depois = get_option('cotacao_dados')['history'] ?? [];
 
-  if (!current_user_can('manage_options')) {
-    wp_die('Sem permissão');
+    if (empty($antes)) {
+      error_log('DELETE ALL: nada para excluir');
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=empty'));
+    } elseif (empty($depois)) {
+      error_log('DELETE ALL: sucesso');
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=deleted_all'));
+    } else {
+      error_log('DELETE ALL: falhou');
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=error'));
+    }
+
+    exit;
   }
 
-  if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'delete_cotacao_item')) {
-    wp_die('Falha de segurança');
-  }
+  // EXCLUIR ITEM
+  if ($action === 'delete_item') {
 
-  $index = intval($_POST['index'] ?? -1);
+    if ($index === null) {
+      error_log('DELETE ITEM: index não enviado');
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=error'));
+      exit;
+    }
 
-  $dados = get_option('cotacao_dados') ?: [];
+    if (!isset($dados['history'][$index])) {
+      error_log('DELETE ITEM: index não existe - ' . $index);
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=not_found'));
+      exit;
+    }
 
-  if (isset($dados['history'][$index])) {
+    $antes = $dados['history'];
 
     unset($dados['history'][$index]);
-
-    // reorganiza o array (evita buracos no índice)
     $dados['history'] = array_values($dados['history']);
 
     update_option('cotacao_dados', $dados);
-  }
 
-  wp_redirect(admin_url('admin.php?page=cotacao'));
-  exit;
+    $depois = get_option('cotacao_dados')['history'] ?? [];
+
+    if (count($depois) < count($antes)) {
+      error_log('DELETE ITEM: sucesso index ' . $index);
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=deleted'));
+    } else {
+      error_log('DELETE ITEM: falhou index ' . $index);
+      wp_redirect(admin_url('admin.php?page=cotacao&msg=error'));
+    }
+
+    exit;
+  }
 
 });
