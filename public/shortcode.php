@@ -2,20 +2,23 @@
 
 add_shortcode('cotacao', function(){
 
-  $dados = get_option('cotacao_dados');
+  global $wpdb;
+  $table = $wpdb->prefix . 'cotacoes';
+
+  $row = $wpdb->get_row("SELECT * FROM $table ORDER BY id DESC LIMIT 1");
+
+  if (!$row) return '';
 
   ob_start();
 ?>
 
 <div class="cotacao-box">
+  <h3>Cotações <?php echo date('d/m/Y', strtotime($row->data)); ?></h3>
 
-  <h3>Cotações <?php echo !empty($dados['data']) ? date('d/m/Y', strtotime($dados['data'])) : ''; ?></h3>
-
-  <div class="cotacao-item"><span>Soja</span><strong>R$ <?php echo number_format($dados['soja'] ?? 0,2,',','.'); ?></strong></div>
-  <div class="cotacao-item"><span>Trigo Branqueador</span><strong>R$ <?php echo number_format($dados['trigo_branqueador'] ?? 0,2,',','.'); ?></strong></div>
-  <div class="cotacao-item"><span>Trigo Pão</span><strong>R$ <?php echo number_format($dados['trigo_pao'] ?? 0,2,',','.'); ?></strong></div>
-  <div class="cotacao-item"><span>Milho</span><strong>R$ <?php echo number_format($dados['milho'] ?? 0,2,',','.'); ?></strong></div>
-
+  <div>Soja: R$ <?php echo number_format($row->soja,2,',','.'); ?></div>
+  <div>Trigo Branqueador: R$ <?php echo number_format($row->trigo_branqueador,2,',','.'); ?></div>
+  <div>Trigo Pão: R$ <?php echo number_format($row->trigo_pao,2,',','.'); ?></div>
+  <div>Milho: R$ <?php echo number_format($row->milho,2,',','.'); ?></div>
 </div>
 
 <?php

@@ -2,88 +2,120 @@
 
 function cotacao_page_html(){
 
+  global $wpdb;
+  $table = $wpdb->prefix . 'cotacoes';
+
+  $page   = max(1, intval($_GET['paged'] ?? 1));
+  $limit  = 10;
+  $offset = ($page - 1) * $limit;
+
+  $total = $wpdb->get_var("SELECT COUNT(*) FROM $table");
+
+  $results = $wpdb->get_results(
+    $wpdb->prepare(
+      "SELECT * FROM $table ORDER BY id DESC LIMIT %d OFFSET %d",
+      $limit,
+      $offset
+    )
+  );
+
   $dados = get_option('cotacao_dados') ?: [];
+  ?>
 
-  $soja   = $dados['soja'] ?? '';
-  $milho  = $dados['milho'] ?? '';
-  $trigo_branqueador  = $dados['trigo_branqueador'] ?? '';
-  $trigo_pao = $dados['trigo_pao'] ?? '';
-  $data   = $dados['data'] ?? '';
-  $history= $dados['history'] ?? [];
+  <div class="wrap">
+    <h1>Cotação</h1>
 
-  // DELETE DIRETO (SEM HOOK)
-  if (isset($_GET['delete_item'])) {
-    $index = intval($_GET['delete_item']);
+    <?php if (isset($_GET['msg'])): ?>
+      <?php if ($_GET['msg'] === 'deleted'): ?>
+        <div class="notice notice-success"><p>Registro excluído.</p></div>
+      <?php elseif ($_GET['msg'] === 'deleted_all'): ?>
+        <div class="notice notice-success"><p>Histórico apagado.</p></div>
+      <?php endif; ?>
+    <?php endif; ?>
 
-    if (isset($history[$index])) {
-      unset($history[$index]);
-      $dados['history'] = array_values($history);
-      update_option('cotacao_dados', $dados);
-      echo '<div class="notice notice-success"><p>Registro excluído.</p></div>';
-    } else {
-      echo '<div class="notice notice-error"><p>Erro ao excluir.</p></div>';
-    }
-  }
+    <form method="post" action="options.php">
+      <?php settings_fields('cotacao_group'); ?>
 
-  if (isset($_GET['delete_all'])) {
-    $dados['history'] = [];
-    update_option('cotacao_dados', $dados);
-    echo '<div class="notice notice-success"><p>Histórico limpo.</p></div>';
-  }
+      <table class="form-table">
+        <tr>
+          <th>Soja</th>
+          <td><input class="money" name="cotacao_dados[soja]" value="<?php echo esc_attr($dados['soja'] ?? ''); ?>"></td>
+        </tr>
+        <tr>
+          <th>Milho</th>
+          <td><input class="money" name="cotacao_dados[milho]" value="<?php echo esc_attr($dados['milho'] ?? ''); ?>"></td>
+        </tr>
+        <tr>
+          <th>Trigo Branqueador</th>
+          <td><input class="money" name="cotacao_dados[trigo_branqueador]" value="<?php echo esc_attr($dados['trigo_branqueador'] ?? ''); ?>"></td>
+        </tr>
+        <tr>
+          <th>Trigo Pão</th>
+          <td><input class="money" name="cotacao_dados[trigo_pao]" value="<?php echo esc_attr($dados['trigo_pao'] ?? ''); ?>"></td>
+        </tr>
+        <tr>
+          <th>Data</th>
+          <td><input type="date" name="cotacao_dados[data]" value="<?php echo esc_attr($dados['data'] ?? ''); ?>"></td>
+        </tr>
+      </table>
 
-?>
+      <?php submit_button(); ?>
+    </form>
 
-<div class="wrap">
-  <h1>Cotação</h1>
+    <h2>Histórico</h2>
 
-  <form method="post" action="options.php">
-    <?php settings_fields('cotacao_group'); ?>
-
-    <table class="form-table">
-      <tr><th>Preço da Soja</th><td><input class="money" name="cotacao_dados[soja]" value="<?php echo esc_attr($soja); ?>"></td></tr>
-      <tr><th>Preço do Milho</th><td><input class="money" name="cotacao_dados[milho]" value="<?php echo esc_attr($milho); ?>"></td></tr>
-      <tr><th>Preço do Trigo Branqueador</th><td><input class="money" name="cotacao_dados[trigo_branqueador]" value="<?php echo esc_attr($trigo_branqueador); ?>"></td></tr>
-      <tr><th>Preço do Trigo Pão</th><td><input class="money" name="cotacao_dados[trigo_pao]" value="<?php echo esc_attr($trigo_pao); ?>"></td></tr>
-      <tr><th>Atualizado em</th><td><input type="date" name="cotacao_dados[data]" value="<?php echo esc_attr($data); ?>"></td></tr>
+    <table class="widefat">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Soja</th>
+          <th>Milho</th>
+          <th>Trigo B.</th>
+          <th>Trigo P.</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if ($results): ?>
+          <?php foreach($results as $row): ?>
+            <tr>
+              <td><?php echo esc_html(date('d/m/Y', strtotime($row->data))); ?></td>
+              <td>R$ <?php echo number_format($row->soja,2,',','.'); ?></td>
+              <td>R$ <?php echo number_format($row->milho,2,',','.'); ?></td>
+              <td>R$ <?php echo number_format($row->trigo_branqueador,2,',','.'); ?></td>
+              <td>R$ <?php echo number_format($row->trigo_pao,2,',','.'); ?></td>
+              <td>
+                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=cotacao&delete_id=' . $row->id), 'delete_item'); ?>" class="button">
+                  Excluir
+                </a>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr><td colspan="6">Sem dados</td></tr>
+        <?php endif; ?>
+      </tbody>
     </table>
 
-    <?php submit_button(); ?>
-  </form>
+    <?php
+    $pages = ceil($total / $limit);
 
-  <h2>Histórico</h2>
+    if ($pages > 1){
+      echo '<div class="tablenav"><div class="tablenav-pages">';
+      for ($i=1; $i <= $pages; $i++){
+        echo '<a class="button '.($i==$page?'button-primary':'').'" href="?page=cotacao&paged='.$i.'">'.$i.'</a> ';
+      }
+      echo '</div></div>';
+    }
+    ?>
 
-  <a href="?page=cotacao&delete_all=1" class="button" onclick="return confirm('Excluir tudo?')">Excluir histórico</a>
+    <form method="post" onsubmit="return confirm('TEM CERTEZA ABSOLUTA? Essa ação apaga tudo.')">
+      <?php wp_nonce_field('delete_all'); ?>
+      <input type="hidden" name="delete_all" value="1">
+      <?php submit_button('Excluir tudo (irreversível)', 'delete'); ?>
+    </form>
 
-  <table class="widefat">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Soja</th>
-        <th>Milho</th>
-        <th>Trigo Branqueador</th>
-        <th>Trigo Pão</th>
-        <th>Ação</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($history)): foreach($history as $index => $h): ?>
-        <tr>
-          <td><?php echo esc_html(date('d/m/Y H:i', strtotime($h['date']))); ?></td>
-          <td>R$ <?php echo esc_html(number_format($h['soja'],2,',','.')); ?></td>
-          <td>R$ <?php echo esc_html(number_format($h['milho'],2,',','.')); ?></td>
-          <td>R$ <?php echo esc_html(number_format($h['trigo_branqueador'],2,',','.')); ?></td>
-          <td>R$ <?php echo esc_html(number_format($h['trigo_pao'],2,',','.')); ?></td>
-          <td>
-            <a href="?page=cotacao&delete_item=<?php echo $index; ?>" class="button" onclick="return confirm('Excluir?')">Excluir</a>
-          </td>
-        </tr>
-      <?php endforeach; else: ?>
-        <tr><td colspan="6">Sem histórico</td></tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
+  </div>
 
-</div>
-
-<?php
+  <?php
 }

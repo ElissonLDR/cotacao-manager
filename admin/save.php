@@ -1,44 +1,41 @@
 <?php
 
-add_action('admin_init', function() {
+add_action('admin_init', function(){
 
   register_setting('cotacao_group', 'cotacao_dados', [
-    'sanitize_callback' => 'cotacao_sanitize'
+    'sanitize_callback' => 'cotacao_save'
   ]);
 
 });
 
-function cotacao_sanitize($input){
+function cotacao_save($input){
 
-  $old = get_option('cotacao_dados') ?: [];
+  global $wpdb;
+  $table = $wpdb->prefix . 'cotacoes';
 
-  $novo = [
-    'soja' => cotacao_to_float($input['soja'] ?? 0),
-    'milho' => cotacao_to_float($input['milho'] ?? 0),
-    'trigo_branqueador' => cotacao_to_float($input['trigo_branqueador'] ?? 0),
-    'trigo_pao' => cotacao_to_float($input['trigo_pao'] ?? 0),
-    'data' => sanitize_text_field($input['data'] ?? ''),
-    'history' => $old['history'] ?? []
-  ];
+  $soja = cotacao_to_float($input['soja'] ?? 0);
+  $milho = cotacao_to_float($input['milho'] ?? 0);
+  $trigo_branqueador = cotacao_to_float($input['trigo_branqueador'] ?? 0);
+  $trigo_pao = cotacao_to_float($input['trigo_pao'] ?? 0);
+  $data = sanitize_text_field($input['data'] ?? '');
 
-  // NÃO salva se tudo for zero
-  if (
-    $novo['soja'] == 0 &&
-    $novo['milho'] == 0 &&
-    $novo['trigo_branqueador'] == 0 &&
-    $novo['trigo_pao'] == 0
-  ) {
-    return $old;
+  if ($soja == 0 && $milho == 0 && $trigo_branqueador == 0 && $trigo_pao == 0) {
+    return get_option('cotacao_dados');
   }
 
-  // SALVA HISTÓRICO
-  $novo['history'][] = [
-    'date' => current_time('mysql'),
-    'soja' => $novo['soja'],
-    'milho' => $novo['milho'],
-    'trigo_branqueador' => $novo['trigo_branqueador'],
-    'trigo_pao' => $novo['trigo_pao'],
-  ];
+  $wpdb->insert($table, [
+    'soja' => $soja,
+    'milho' => $milho,
+    'trigo_branqueador' => $trigo_branqueador,
+    'trigo_pao' => $trigo_pao,
+    'data' => $data
+  ]);
 
-  return $novo;
+  return [
+    'soja' => $soja,
+    'milho' => $milho,
+    'trigo_branqueador' => $trigo_branqueador,
+    'trigo_pao' => $trigo_pao,
+    'data' => $data
+  ];
 }
