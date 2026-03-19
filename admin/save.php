@@ -1,14 +1,19 @@
 <?php
 
-add_action('admin_init', function() {
+add_action('admin_init', 'cotacao_register_settings');
+
+function cotacao_register_settings() {
+
   register_setting('cotacao_group', 'cotacao_dados', [
     'sanitize_callback' => 'cotacao_sanitize'
   ]);
-});
+
+}
+
 
 function cotacao_sanitize($input){
 
-  $old = get_option('cotacao_dados');
+  $old = get_option('cotacao_dados') ?: [];
 
   $novo = [
     'soja'   => cotacao_to_float($input['soja'] ?? 0),
@@ -19,21 +24,25 @@ function cotacao_sanitize($input){
     'history'=> $old['history'] ?? []
   ];
 
+  // Salva histórico apenas se mudou algo
   if (
-    !$old ||
+    empty($old) ||
     $old['soja'] != $novo['soja'] ||
     $old['milho'] != $novo['milho'] ||
     $old['trigo'] != $novo['trigo'] ||
     $old['trigo2'] != $novo['trigo2']
   ) {
+
     $novo['history'][] = [
-      'date' => current_time('mysql'),
-      'soja' => $novo['soja'],
-      'milho'=> $novo['milho'],
-      'trigo'=> $novo['trigo'],
-      'trigo2'=> $novo['trigo2'],
+      'date'   => current_time('mysql'),
+      'soja'   => $novo['soja'],
+      'milho'  => $novo['milho'],
+      'trigo'  => $novo['trigo'],
+      'trigo2' => $novo['trigo2'],
     ];
+
   }
 
   return $novo;
+
 }

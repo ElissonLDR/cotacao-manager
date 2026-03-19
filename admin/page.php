@@ -2,7 +2,7 @@
 
 function cotacao_page_html(){
 
-  $dados = get_option('cotacao_dados');
+  $dados = get_option('cotacao_dados') ?: [];
 
   $soja   = $dados['soja'] ?? '';
   $milho  = $dados['milho'] ?? '';
@@ -31,21 +31,30 @@ function cotacao_page_html(){
 
   <h2>Histórico</h2>
 
-  <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+  <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
     <input type="hidden" name="action" value="delete_cotacao_history">
+    <?php wp_nonce_field('delete_cotacao_history'); ?>
     <?php submit_button('Excluir histórico', 'delete'); ?>
   </form>
 
   <table class="widefat">
-    <thead><tr><th>Data</th><th>Soja</th><th>Milho</th><th>Trigo</th><th>Trigo2</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Soja</th>
+        <th>Milho</th>
+        <th>Trigo</th>
+        <th>Trigo2</th>
+      </tr>
+    </thead>
     <tbody>
-      <?php if ($history): foreach(array_reverse($history) as $h): ?>
+      <?php if (!empty($history)): foreach(array_reverse($history) as $h): ?>
         <tr>
-          <td><?php echo date('d/m/Y H:i', strtotime($h['date'])); ?></td>
-          <td>R$ <?php echo number_format($h['soja'],2,',','.'); ?></td>
-          <td>R$ <?php echo number_format($h['milho'],2,',','.'); ?></td>
-          <td>R$ <?php echo number_format($h['trigo'],2,',','.'); ?></td>
-          <td>R$ <?php echo number_format($h['trigo2'],2,',','.'); ?></td>
+          <td><?php echo !empty($h['date']) ? esc_html(date('d/m/Y H:i', strtotime($h['date']))) : ''; ?></td>
+          <td>R$ <?php echo esc_html(number_format($h['soja'] ?? 0,2,',','.')); ?></td>
+          <td>R$ <?php echo esc_html(number_format($h['milho'] ?? 0,2,',','.')); ?></td>
+          <td>R$ <?php echo esc_html(number_format($h['trigo'] ?? 0,2,',','.')); ?></td>
+          <td>R$ <?php echo esc_html(number_format($h['trigo2'] ?? 0,2,',','.')); ?></td>
         </tr>
       <?php endforeach; else: ?>
         <tr><td colspan="5">Sem histórico</td></tr>
@@ -54,3 +63,6 @@ function cotacao_page_html(){
   </table>
 
 </div>
+
+<?php
+}

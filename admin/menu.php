@@ -1,6 +1,9 @@
 <?php
 
-add_action('admin_menu', function() {
+add_action('admin_menu', 'cotacao_add_admin_menu');
+
+function cotacao_add_admin_menu() {
+
   add_menu_page(
     'Cotação',
     'Cotação',
@@ -10,4 +13,5 @@ add_action('admin_menu', function() {
     'dashicons-chart-line',
     25
   );
-});
+
+}
