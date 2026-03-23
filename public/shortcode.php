@@ -13,13 +13,40 @@ add_shortcode('cotacao', function(){
 ?>
 
 <div class="cotacao-box">
-  <h3>Cotações <?php echo date('d/m/Y', strtotime($row->data)); ?></h3>
-
-  <div>Soja: R$ <?php echo number_format($row->soja,2,',','.'); ?></div>
-  <div>Trigo Branqueador: R$ <?php echo number_format($row->trigo_branqueador,2,',','.'); ?></div>
-  <div>Trigo Pão: R$ <?php echo number_format($row->trigo_pao,2,',','.'); ?></div>
-  <div>Milho: R$ <?php echo number_format($row->milho,2,',','.'); ?></div>
-</div>
+  
+    <div class="cotacao-header">
+      <div class="cotacao-title">
+        <img src="https://v4amaral.com.br/vicato/wp-content/uploads/2026/03/Icone-trigo.svg" class="cotacao-icon">
+        <span>COTAÇÕES AGRÍCOLAS</span>
+      </div>
+      <div class="cotacao-sub">
+        Cotações praticadas pela Vicato - <?php echo date('d/m/Y'); ?>
+      </div>
+    </div>
+  
+    <div class="cotacao-list">
+      <div class="cotacao-item">
+        <span>Soja</span>
+        <strong>R$ <?php echo number_format($row->soja, 2, ',', '.'); ?></strong>
+      </div>
+  
+      <div class="cotacao-item">
+        <span>Trigo Branqueador</span>
+        <strong>R$ <?php echo number_format($row->trigo_branqueador, 2, ',', '.'); ?></strong>
+      </div>
+  
+      <div class="cotacao-item">
+        <span>Trigo Pão</span>
+        <strong>R$ <?php echo number_format($row->trigo_pao, 2, ',', '.'); ?></strong>
+      </div>
+  
+      <div class="cotacao-item">
+        <span>Milho</span>
+        <strong>R$ <?php echo number_format($row->milho, 2, ',', '.'); ?></strong>
+      </div>
+    </div>
+  
+  </div>
 
 <?php
   return ob_get_clean();
