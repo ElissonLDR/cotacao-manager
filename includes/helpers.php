@@ -12,3 +12,17 @@ if (!function_exists('cotacao_to_float')) {
   }
 
 }
+
+if (!function_exists('cotacao_format_money')) {
+
+  function cotacao_format_money($value){
+
+    if ($value === '' || $value === null) return '';
+
+    if (!is_numeric($value)) return '';
+
+    return 'R$ ' . number_format((float) $value, 2, ',', '.');
+
+  }
+
+}

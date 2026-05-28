@@ -39,19 +39,19 @@ function cotacao_page_html(){
       <table class="form-table">
         <tr>
           <th>Soja</th>
-          <td><input class="money" name="cotacao_dados[soja]" value="<?php echo esc_attr($dados['soja'] ?? ''); ?>"></td>
-        </tr>
-        <tr>
-          <th>Milho</th>
-          <td><input class="money" name="cotacao_dados[milho]" value="<?php echo esc_attr($dados['milho'] ?? ''); ?>"></td>
+          <td><input class="money" name="cotacao_dados[soja]" value="<?php echo esc_attr(cotacao_format_money($dados['soja'] ?? '')); ?>"></td>
         </tr>
         <tr>
           <th>Trigo Branqueador</th>
-          <td><input class="money" name="cotacao_dados[trigo_branqueador]" value="<?php echo esc_attr($dados['trigo_branqueador'] ?? ''); ?>"></td>
+          <td><input class="money" name="cotacao_dados[trigo_branqueador]" value="<?php echo esc_attr(cotacao_format_money($dados['trigo_branqueador'] ?? '')); ?>"></td>
         </tr>
         <tr>
           <th>Trigo Pão</th>
-          <td><input class="money" name="cotacao_dados[trigo_pao]" value="<?php echo esc_attr($dados['trigo_pao'] ?? ''); ?>"></td>
+          <td><input class="money" name="cotacao_dados[trigo_pao]" value="<?php echo esc_attr(cotacao_format_money($dados['trigo_pao'] ?? '')); ?>"></td>
+        </tr>
+        <tr>
+          <th>Milho</th>
+          <td><input class="money" name="cotacao_dados[milho]" value="<?php echo esc_attr(cotacao_format_money($dados['milho'] ?? '')); ?>"></td>
         </tr>
         <tr>
           <th>Data</th>
@@ -69,9 +69,9 @@ function cotacao_page_html(){
         <tr>
           <th>Data</th>
           <th>Soja</th>
-          <th>Milho</th>
           <th>Trigo B.</th>
           <th>Trigo P.</th>
+          <th>Milho</th>
           <th>Ação</th>
         </tr>
       </thead>
@@ -81,11 +81,11 @@ function cotacao_page_html(){
             <tr>
               <td><?php echo esc_html(date('d/m/Y', strtotime($row->data))); ?></td>
               <td>R$ <?php echo number_format($row->soja,2,',','.'); ?></td>
-              <td>R$ <?php echo number_format($row->milho,2,',','.'); ?></td>
               <td>R$ <?php echo number_format($row->trigo_branqueador,2,',','.'); ?></td>
               <td>R$ <?php echo number_format($row->trigo_pao,2,',','.'); ?></td>
+              <td>R$ <?php echo number_format($row->milho,2,',','.'); ?></td>
               <td>
-                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=cotacao&delete_id=' . $row->id), 'delete_item'); ?>" class="button">
+                <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=cotacao&delete_id=' . $row->id), 'delete_item')); ?>" class="button" onclick="return confirm('Excluir este registro do histórico?');">
                   Excluir
                 </a>
               </td>
