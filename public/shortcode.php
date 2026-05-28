@@ -20,7 +20,7 @@ add_shortcode('cotacao', function(){
         <span>COTAÇÕES AGRÍCOLAS</span>
       </div>
       <div class="cotacao-sub">
-        Cotações praticadas pela Vicato - <?php echo date('d/m/Y'); ?>
+        Cotações praticadas pela Vicato - <?php echo esc_html(date_i18n('d/m/Y', strtotime($row->data))); ?>
       </div>
     </div>
   

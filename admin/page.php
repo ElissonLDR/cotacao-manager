@@ -30,6 +30,8 @@ function cotacao_page_html(){
         <div class="notice notice-success"><p>Registro excluído.</p></div>
       <?php elseif ($_GET['msg'] === 'deleted_all'): ?>
         <div class="notice notice-success"><p>Histórico apagado.</p></div>
+      <?php elseif ($_GET['msg'] === 'delete_all_denied'): ?>
+        <div class="notice notice-warning"><p>Exclusão cancelada: confirme a caixa de verificação antes de apagar o histórico.</p></div>
       <?php endif; ?>
     <?php endif; ?>
 
@@ -55,7 +57,10 @@ function cotacao_page_html(){
         </tr>
         <tr>
           <th>Data</th>
-          <td><input type="date" name="cotacao_dados[data]" value="<?php echo esc_attr($dados['data'] ?? ''); ?>"></td>
+          <td>
+            <input type="date" name="cotacao_dados[data]" value="<?php echo esc_attr(current_time('Y-m-d')); ?>">
+            <p class="description">Padrão: data de hoje. Altere para registrar cotações de datas anteriores.</p>
+          </td>
         </tr>
       </table>
 
@@ -72,6 +77,7 @@ function cotacao_page_html(){
           <th>Trigo B.</th>
           <th>Trigo P.</th>
           <th>Milho</th>
+          <th>Atualizado por</th>
           <th>Ação</th>
         </tr>
       </thead>
@@ -84,6 +90,7 @@ function cotacao_page_html(){
               <td>R$ <?php echo number_format($row->trigo_branqueador,2,',','.'); ?></td>
               <td>R$ <?php echo number_format($row->trigo_pao,2,',','.'); ?></td>
               <td>R$ <?php echo number_format($row->milho,2,',','.'); ?></td>
+              <td><?php echo esc_html(cotacao_get_author_name($row)); ?></td>
               <td>
                 <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=cotacao&delete_id=' . $row->id), 'delete_item')); ?>" class="button" onclick="return confirm('Excluir este registro do histórico?');">
                   Excluir
@@ -92,7 +99,7 @@ function cotacao_page_html(){
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="6">Sem dados</td></tr>
+          <tr><td colspan="7">Sem dados</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
@@ -109,11 +116,61 @@ function cotacao_page_html(){
     }
     ?>
 
-    <form method="post" onsubmit="return confirm('TEM CERTEZA ABSOLUTA? Essa ação apaga tudo.')">
+    <?php if ($total > 0): ?>
+    <hr>
+    <h2>Zona de perigo</h2>
+    <form method="post" id="cotacao-delete-all-form" action="<?php echo esc_url(admin_url('admin.php?page=cotacao')); ?>">
       <?php wp_nonce_field('delete_all'); ?>
       <input type="hidden" name="delete_all" value="1">
-      <?php submit_button('Excluir tudo (irreversível)', 'delete'); ?>
+      <p>
+        <label>
+          <input type="checkbox" name="delete_all_confirm" value="1" id="cotacao-delete-all-confirm">
+          Confirmo que desejo apagar <strong>permanentemente</strong> todo o histórico de cotações.
+        </label>
+      </p>
+      <p class="submit">
+        <input
+          type="submit"
+          id="cotacao-delete-all-btn"
+          class="button button-delete"
+          value="Excluir tudo (irreversível)"
+          disabled
+        >
+      </p>
     </form>
+    <script>
+    (function () {
+      var form = document.getElementById('cotacao-delete-all-form');
+      var cb = document.getElementById('cotacao-delete-all-confirm');
+      var btn = document.getElementById('cotacao-delete-all-btn');
+      if (!form || !cb || !btn) return;
+
+      function syncButton() {
+        if (cb.checked) {
+          btn.removeAttribute('disabled');
+        } else {
+          btn.setAttribute('disabled', 'disabled');
+        }
+      }
+
+      cb.addEventListener('change', syncButton);
+      syncButton();
+
+      form.addEventListener('submit', function (e) {
+        if (!cb.checked) {
+          e.preventDefault();
+          window.alert('Marque a caixa de confirmação para continuar.');
+          return;
+        }
+        var ok1 = window.confirm('Isso apagará TODOS os registros do histórico. Esta ação não pode ser desfeita.\n\nDeseja continuar?');
+        var ok2 = window.confirm('Última confirmação: tem certeza absoluta que deseja excluir todo o histórico?');
+        if (!ok1 || !ok2) {
+          e.preventDefault();
+        }
+      });
+    })();
+    </script>
+    <?php endif; ?>
 
   </div>
 

@@ -7,7 +7,7 @@ function cotacao_add_admin_menu() {
   add_menu_page(
     'Cotação',
     'Cotação',
-    'manage_options',
+    COTACAO_CAP,
     'cotacao',
     'cotacao_page_html',
     'dashicons-chart-line',

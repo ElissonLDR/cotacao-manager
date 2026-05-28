@@ -4,7 +4,7 @@ add_action('admin_init', function(){
 
   if (!isset($_GET['cotacao_action'])) return;
 
-  if (!current_user_can('manage_options')) {
+  if (!cotacao_user_can_manage()) {
     wp_die('Sem permissão');
   }
 
